@@ -41,8 +41,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('api.urls', namespace='api')),
 
-    re_path(r'^/', include('djoser.urls.authtoken')),
-    re_path(r'^/', include('djoser.urls')),
+    re_path(r'^', include('djoser.urls.authtoken')),
+    re_path(r'^', include('djoser.urls')),
 
     # swagger
     re_path(r'^swagger(?P<format>\.json|\.yaml)$',
