@@ -8,9 +8,9 @@ class IdeasSerializers(serializers.ModelSerializer):
 
     def get_author(self, obj):
         return {
-            "username": obj.idea_writer.username,
-            "first_name": obj.idea_writer.first_name,
-            "last_name": obj.idea_writer.last_name,
+            "username": obj.author.username,
+            "first_name": obj.author.first_name,
+            "last_name": obj.author.last_name,
         }
 
     author = serializers.SerializerMethodField("get_author")
