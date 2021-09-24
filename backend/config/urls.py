@@ -26,16 +26,14 @@ from drf_yasg import openapi
 
 # swagger
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Chikarestoon API",
-      default_version='v1',
-      description="Here is all our endpoints.",
-    #   terms_of_service="https://www.google.com/policies/terms/",
-    #   contact=openapi.Contact(email="contact@snippets.local"),
-      license=openapi.License(name="GPLv3 License"),
-   ),
-   public=True,
-   permission_classes=(permissions.AllowAny,),
+    openapi.Info(
+        title="Chikarestoon API",
+        default_version='v1',
+        description="We tell you what to do when you're bored ",
+        license=openapi.License(name="GPLv3 License"),
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 
@@ -43,18 +41,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('api.urls', namespace='api')),
 
-
-    #! dj-rest-auth + jwt
-    path('api/v1/auth/', include('dj_rest_auth.urls')),
-    path('api/v1/auth/registration/',
-         include('dj_rest_auth.registration.urls')),
-    # and need add confirm template!
-    path('api/v1/auth/password/reset/confirm/<uidb64>/<token>/',
-         PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    re_path(r'^/', include('djoser.urls.authtoken')),
+    re_path(r'^/', include('djoser.urls')),
 
     # swagger
-    re_path(r'^api/v1/swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    re_path(r'^api/v1/swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    re_path(r'^api/v1/redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    
+    re_path(r'^swagger(?P<format>\.json|\.yaml)$',
+            schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    re_path(r'^swagger/$', schema_view.with_ui('swagger',
+            cache_timeout=0), name='schema-swagger-ui'),
+    re_path(r'^redoc/$', schema_view.with_ui('redoc',
+            cache_timeout=0), name='schema-redoc'),
+
 ]
