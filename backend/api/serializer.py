@@ -13,7 +13,7 @@ class IdeasSerializers(serializers.ModelSerializer):
             "last_name": obj.idea_writer.last_name,
         }
 
-    idea_writer = serializers.SerializerMethodField("get_author")
+    author = serializers.SerializerMethodField("get_author")
 
     class Meta:
         model = Ideas

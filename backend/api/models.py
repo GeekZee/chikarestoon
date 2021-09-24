@@ -24,11 +24,11 @@ class Ideas(models.Model):
     title = models.CharField(max_length=80)
     text = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
-    category_ides = models.OneToOneField(Category, null=True, on_delete=models.SET_NULL)
-    idea_writer = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    category_ides = models.ForeignKey(Category, null=True, on_delete=models.SET_NULL)
+    author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return f"{self.idea_writer.username} : {self.title}"
+        return f"{self.author.username} : {self.title}"
 
 
 class Stars(models.Model):
