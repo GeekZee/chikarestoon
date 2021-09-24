@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import Ideas, Stars, UserInfo
+from .models import Ideas, Stars, UserInfo, Category
 
-from django.contrib.auth import get_user_model
 # from drf_dynamic_fields import DynamicFieldsMixin
 
 
@@ -23,8 +22,3 @@ class IdeasSerializers(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
-class UserSerializers(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        exclude = ('password', 'email',)
