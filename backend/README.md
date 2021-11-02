@@ -3,9 +3,12 @@ We tell you what to do when you're bored
 
 
 
+## Technologies
+- FastAPI
+- SQLModel orm
 
 
-## Run:
+## Run
 
 * clone this repo
 * > cd backend
