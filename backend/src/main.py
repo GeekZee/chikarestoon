@@ -1,5 +1,5 @@
-from .models import Hashtag, User, Post
-from .database import create_db_and_tables, engine
+from .db.models import Hashtag, User, Post
+from .db.database import create_db_and_tables, engine
 
 from fastapi import FastAPI
 from sqlmodel import Session
