@@ -43,11 +43,11 @@ class Post(PostBase, table=True):
 
 
 class PostCreate(PostBase):
-    pass
+    hashtags: List[str]
 
 
 class PostUpdate(PostBase):
-    pass
+    hashtags: List[str]
 
 
 class PostRead(PostBase):
