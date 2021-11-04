@@ -1,4 +1,4 @@
-from .db.models import Hashtag, User, Post
+from .db.models import Hashtag, User, Post, UserPostLink, PostHashtagLink
 from .db.database import create_db_and_tables, engine
 
 from fastapi import FastAPI
