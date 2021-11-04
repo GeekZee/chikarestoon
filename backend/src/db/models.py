@@ -1,9 +1,9 @@
 from typing import List, Optional
+from datetime import datetime
 
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import UniqueConstraint
 from pydantic import EmailStr
-from datetime import datetime
 
 
 class UserBase(SQLModel):
