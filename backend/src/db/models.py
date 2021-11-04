@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import UniqueConstraint
 from pydantic import EmailStr
 from datetime import datetime
 
@@ -10,6 +11,7 @@ class UserBase(SQLModel):
 
 
 class User(UserBase, table=True):
+    __table_args__ = (UniqueConstraint("username"), UniqueConstraint("email"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(min_length=5, max_length=20)
     email: EmailStr
@@ -31,7 +33,7 @@ class UserRead(UserBase):
 
 
 class PostBase(UserBase):
-    title: str = Field(min_length=10, max_length=200)
+    title: str = Field(min_length=10, max_length=50)
     description: str = Field(min_length=10, max_length=1000)
 
 
