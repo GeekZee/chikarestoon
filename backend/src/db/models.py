@@ -31,7 +31,7 @@ class UserRead(UserBase):
 
 
 class PostBase(UserBase):
-    title: str = Field(min_length=10, max_length=200)
+    title: str = Field(min_length=10, max_length=50)
     description: str = Field(min_length=10, max_length=1000)
 
 
