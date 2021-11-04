@@ -6,11 +6,12 @@ from datetime import datetime
 
 
 class UserBase(SQLModel):
-    username: str = Field(min_length=5, max_length=20)
+    pass
 
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(min_length=5, max_length=20)
     email: EmailStr
     join_date: datetime = Field(default=datetime.utcnow)
     is_super_user: bool = Field(default=False)
@@ -20,12 +21,13 @@ class User(UserBase, table=True):
 
 
 class UserCreateUpdate(UserBase):
+    username: str = Field(min_length=5, max_length=20)
     password: str = Field(min_length=8)
     email: EmailStr
 
 
 class UserRead(UserBase):
-    id = int
+    id: int
 
 
 class PostBase(UserBase):
@@ -49,7 +51,7 @@ class PostUpdate(PostBase):
 
 
 class PostRead(PostBase):
-    id = int
+    id: int
 
 
 class Hashtag(SQLModel, table=True):
