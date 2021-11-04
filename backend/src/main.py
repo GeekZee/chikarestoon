@@ -10,7 +10,7 @@ def get_session():
         yield session
 
 
-app = FastAPI()
+app = FastAPI(title="chikarestoon")
 
 
 @app.on_event("startup")
