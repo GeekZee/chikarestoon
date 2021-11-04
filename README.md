@@ -2,7 +2,6 @@
 We tell you what to do when you're bored
 
 
-
 # Backend:
 
 ### Technologies
@@ -13,7 +12,7 @@ We tell you what to do when you're bored
 ### Run
 
 * clone this repo
-* ``` cd backend ```
+* ``` cd ./chikarestoon/backend ```
 * ``` python -m venv venv  ```
 * ``` source ./venv/bin/activate ```
 * ``` pip install -r ./src/requirements.txt ```
