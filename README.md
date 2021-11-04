@@ -2,20 +2,9 @@
 We tell you what to do when you're bored
 
 
-# Backend:
-
-### Technologies
+## Backend:
 - FastAPI
 - SQLModel orm
 
-
-### Run
-
-* clone this repo
-* ``` cd ./chikarestoon/backend ```
-* ``` python -m venv venv  ```
-* ``` source ./venv/bin/activate ```
-* ``` pip install -r ./src/requirements.txt ```
-* ``` uvicorn src.main:app --reload ```
-
+[backend md file](./backend/README.md)
 
