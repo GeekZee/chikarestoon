@@ -1,5 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
+from pydantic import BaseModel
 
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import UniqueConstraint
@@ -33,11 +34,7 @@ class PostUserReportLink(SQLModel, table=True):
     )
 
 
-class UserBase(SQLModel):
-    pass
-
-
-class User(UserBase, table=True):
+class User(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("username"), UniqueConstraint("email"),)
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(min_length=5, max_length=20)
@@ -52,6 +49,20 @@ class User(UserBase, table=True):
 
     reported: List["Post"] = Relationship(
         back_populates="reports", link_model=UserPostLikeLink)
+
+
+class UserIn(BaseModel):
+    username: str = Field(min_length=5, max_length=20)
+    password: str = Field(min_length=8)
+    email: EmailStr
+
+
+class UserOut(BaseModel):
+    username: str = Field(min_length=5, max_length=20)
+    email: EmailStr
+    join_date: datetime
+    is_super_user: bool
+    is_verifide: bool
 
 
 class PostBase(SQLModel):
