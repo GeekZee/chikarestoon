@@ -24,6 +24,15 @@ class PostHashtagLink(SQLModel, table=True):
     )
 
 
+class PostUserReportLink(SQLModel, table=True):
+    post_id: Optional[int] = Field(
+        default=None, foreign_key="post.id", primary_key=True
+    )
+    user_id: Optional[int] = Field(
+        default=None, foreign_key="user.id", primary_key=True
+    )
+
+
 class UserBase(SQLModel):
     pass
 
@@ -41,15 +50,8 @@ class User(UserBase, table=True):
     favorites: List["Post"] = Relationship(
         back_populates="likes", link_model=UserPostLikeLink)
 
-
-class UserCreateUpdate(UserBase):
-    username: str = Field(min_length=5, max_length=20)
-    password: str = Field(min_length=8)
-    email: EmailStr
-
-
-class UserRead(UserBase):
-    id: int
+    reported: List["Post"] = Relationship(
+        back_populates="reports", link_model=UserPostLikeLink)
 
 
 class PostBase(SQLModel):
@@ -66,17 +68,8 @@ class Post(PostBase, table=True):
     hashtags: List["Hashtag"] = Relationship(
         back_populates="posts", link_model=PostHashtagLink)
 
-
-class PostCreate(PostBase):
-    hashtags: List[str]
-
-
-class PostUpdate(PostBase):
-    hashtags: List[str]
-
-
-class PostRead(PostBase):
-    id: int
+    reports: List[User] = Relationship(
+        back_populates="reported", link_model=UserPostLikeLink)
 
 
 class Hashtag(SQLModel, table=True):
