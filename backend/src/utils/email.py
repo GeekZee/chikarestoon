@@ -1,5 +1,5 @@
 from typing import List
-
+from datetime import datetime, timedelta
 from ..db.models import User
 from ..utils.config import get_settings
 
@@ -29,7 +29,8 @@ async def send_mail(email: List, instance: User):
 
     token_data = {
         "id": instance.id,
-        "type": "email_verification"
+        "type": "email_verification",
+        "exp": datetime.utcnow() + timedelta(days=1)
     }
 
     token = jwt.encode(token_data, get_settings().SECRET, algorithm="HS256")
