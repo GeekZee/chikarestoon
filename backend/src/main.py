@@ -3,7 +3,6 @@ from .db.database import create_db_and_tables, engine
 from .routers import users
 
 from fastapi import FastAPI
-from sqlmodel import Session
 
 
 app = FastAPI(title="chikarestoon")
