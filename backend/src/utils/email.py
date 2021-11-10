@@ -29,8 +29,7 @@ async def send_mail(email: List, instance: User):
 
     token_data = {
         "id": instance.id,
-        "username": instance.username,
-        "email": instance.email
+        "type": "email_verification"
     }
 
     token = jwt.encode(token_data, get_settings().SECRET, algorithm="HS256")
