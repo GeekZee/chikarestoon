@@ -1,11 +1,18 @@
 
 
 from ..db.models import User
-from .schema import UserIn, UserOut
+from .schema import (UserIn,
+                     UserOut,
+                     UserOutPrivateData,
+                     AccessRefreshToken,
+                     RefreshToken)
 from ..db.database import engine
-from ..utils.auth import get_hashed_password, verify_password
+from ..utils.auth import (get_hashed_password,
+                          token_generator,
+                          get_current_user)
 from ..utils.email import send_mail
 from ..utils.config import get_settings
+
 
 from fastapi import (Depends,
                      APIRouter,
@@ -15,6 +22,7 @@ from fastapi import (Depends,
                      )
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlmodel import Session, select
 import jwt
@@ -84,6 +92,17 @@ async def email_verification(request: Request,
             "is_verifide": 'اکانت یافت نشد'
         }
         return template.TemplateResponse("verification.html", context)
+
+
+@router.post("/token/access", response_model=AccessRefreshToken)
+async def generate_access_and_refresh_tokens(request_form: OAuth2PasswordRequestForm = Depends()):
+    return await token_generator(request_form.username, request_form.password)
+
+
+@router.get('/me', response_model=UserOutPrivateData)
+async def user_profile(user: User = Depends(get_current_user)):
+    print(user)
+    return user
 
 
 @router.get('/{username}', response_model=UserOut)
