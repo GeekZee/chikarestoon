@@ -1,10 +1,18 @@
-from ..db.models import User, UserIn, UserOut
+
+
+from ..db.models import User
+from .schema import UserIn, UserOut
 from ..db.database import engine
 from ..utils.passwd import get_hashed_password, verify_password
 from ..utils.email import send_mail
 from ..utils.config import get_settings
 
-from fastapi import Depends, APIRouter, HTTPException, status, Request
+from fastapi import (Depends,
+                     APIRouter,
+                     HTTPException,
+                     status,
+                     Request,
+                     )
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -21,7 +29,7 @@ def get_session():
         yield session
 
 
-@router.post("/signup/", response_model=UserOut)
+@router.post("/signup/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def sign_up(*, session: Session = Depends(get_session), user: UserIn):
     if session.exec(select(User).where(User.email == user.email)).first():
         raise HTTPException(
@@ -45,27 +53,46 @@ async def email_verification(request: Request,
                              token: str,
                              session: Session = Depends(get_session)):
     try:
-        payload = jwt.decode(token, get_settings().SECRET,
+        payload = jwt.decode(token,
+                             get_settings().SECRET,
                              algorithms=["HS256"])
-        statement = select(User).where(User.email == payload.get("email")
-                                       ).where(User.id == payload.get("id"))
-        user = session.exec(statement).first()
 
-        if user:
-            if not user.is_verifide:
-                user.is_verifide = True
-                session.add(user)
-                session.commit()
+        if payload.get("type") == 'email_verification':
+            user = session.exec(
+                select(User).where(User.id == payload.get("id"))).first()
 
-            context = {
-                "request": request,
-                "username": user.username,
-                "is_verifide": f'تایید ایمیل با موفقیت انجام شد'}
+            if user:
+                if not user.is_verifide:
+                    user.is_verifide = True
+                    session.add(user)
+                    session.commit()
+                context = {
+                    "request": request,
+                    "username": user.username,
+                    "is_verifide": f'تایید ایمیل با موفقیت انجام شد'}
+                return template.TemplateResponse("verification.html", context)
 
-            return template.TemplateResponse("verification.html", context)
+        context = {
+            "request": request,
+            "is_verifide": 'اکانت یافت نشد'
+        }
+        return template.TemplateResponse("verification.html", context)
+
     except:
         context = {
             "request": request,
-            "is_verifide": 'تایید ایمیل انجام نشد'
+            "is_verifide": 'اکانت یافت نشد'
         }
         return template.TemplateResponse("verification.html", context)
+
+
+@router.get('/{username}', response_model=UserOut)
+async def user(username: str, session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.username == username)).first()
+    if user:
+        return user
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Username Not Found"
+    )
