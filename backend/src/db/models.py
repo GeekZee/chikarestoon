@@ -51,27 +51,10 @@ class User(SQLModel, table=True):
         back_populates="reports", link_model=UserPostLikeLink)
 
 
-class UserIn(BaseModel):
-    username: str = Field(min_length=5, max_length=20)
-    password: str = Field(min_length=8)
-    email: EmailStr
-
-
-class UserOut(BaseModel):
-    username: str = Field(min_length=5, max_length=20)
-    email: EmailStr
-    join_date: datetime
-    is_super_user: bool
-    is_verifide: bool
-
-
-class PostBase(SQLModel):
+class Post(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
     title: str = Field(min_length=10, max_length=50)
     description: str = Field(min_length=10, max_length=1000)
-
-
-class Post(PostBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     user: Optional[User] = Relationship(back_populates="posts")
     likes: List[User] = Relationship(
