@@ -3,7 +3,7 @@
 from ..db.models import User
 from .schema import UserIn, UserOut
 from ..db.database import engine
-from ..utils.passwd import get_hashed_password, verify_password
+from ..utils.auth import get_hashed_password, verify_password
 from ..utils.email import send_mail
 from ..utils.config import get_settings
 
