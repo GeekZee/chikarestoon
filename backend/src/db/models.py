@@ -1,6 +1,5 @@
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel
 
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import UniqueConstraint

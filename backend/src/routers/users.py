@@ -9,7 +9,9 @@ from .schema import (UserIn,
 from ..db.database import engine
 from ..utils.auth import (get_hashed_password,
                           token_generator,
-                          get_current_user)
+                          token_generator_by_refresh_token,
+                          get_current_user,
+                          get_current_user_by_refresh_token)
 from ..utils.email import send_mail
 from ..utils.config import get_settings
 
@@ -37,7 +39,7 @@ def get_session():
         yield session
 
 
-@router.post("/signup/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/signup/", response_model=UserOut, status_code=status.HTTP_201_CREATED, tags=['auth'])
 async def sign_up(*, session: Session = Depends(get_session), user: UserIn):
     if session.exec(select(User).where(User.email == user.email)).first():
         raise HTTPException(
@@ -56,7 +58,7 @@ async def sign_up(*, session: Session = Depends(get_session), user: UserIn):
     return db_user
 
 
-@router.get("/verification/email", response_class=HTMLResponse)
+@router.get("/verification/email", response_class=HTMLResponse, tags=['email'])
 async def email_verification(request: Request,
                              token: str,
                              session: Session = Depends(get_session)):
@@ -94,19 +96,24 @@ async def email_verification(request: Request,
         return template.TemplateResponse("verification.html", context)
 
 
-@router.post("/token/access", response_model=AccessRefreshToken)
-async def generate_access_and_refresh_tokens(request_form: OAuth2PasswordRequestForm = Depends()):
+@router.post("/auth/login", response_model=AccessRefreshToken, tags=['auth'])
+async def generate_access_token_and_refresh_token(request_form: OAuth2PasswordRequestForm = Depends()):
     return await token_generator(request_form.username, request_form.password)
 
 
-@router.get('/me', response_model=UserOutPrivateData)
-async def user_profile(user: User = Depends(get_current_user)):
-    print(user)
+@router.post('/auth/refresh', response_model=RefreshToken, tags=['auth'])
+async def fresh_access_token(user: User = Depends(get_current_user_by_refresh_token)):
+    '''imput `refresh_token` and return a new`access_token`'''
+    return await token_generator_by_refresh_token(user)
+
+
+@router.get('/me', response_model=UserOutPrivateData, tags=['users'])
+async def full_user_profile(user: User = Depends(get_current_user)):
     return user
 
 
-@router.get('/{username}', response_model=UserOut)
-async def user(username: str, session: Session = Depends(get_session)):
+@router.get('/detail/{username}', response_model=UserOut, tags=['users'])
+async def user_public_data(username: str, session: Session = Depends(get_session)):
     user = session.exec(select(User).where(User.username == username)).first()
     if user:
         return user

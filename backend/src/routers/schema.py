@@ -4,8 +4,8 @@ from enum import Enum
 
 
 class RefreshToken(BaseModel):
-    access_token: str
     token_type: str
+    access_token: str
 
 
 class AccessRefreshToken(RefreshToken):
@@ -25,9 +25,9 @@ class UserOut(BaseModel):
 
 
 class UserOutPrivateData(UserOut):
-    id: int
-    email: EmailStr
     is_super_user: bool
+    email: EmailStr
+    id: int
 
 
 class PostSort(str, Enum):
