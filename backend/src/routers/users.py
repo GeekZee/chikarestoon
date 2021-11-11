@@ -1,19 +1,19 @@
 
 
 from ..db.models import User
-from .schema import (UserIn,
-                     UserOut,
-                     UserOutPrivateData,
-                     AccessRefreshToken,
-                     RefreshToken)
 from ..db.database import engine
+from ..utils.email import send_mail
+from ..utils.config import get_settings
 from ..utils.auth import (get_hashed_password,
                           token_generator,
                           token_generator_by_refresh_token,
                           get_current_user,
                           get_current_user_by_refresh_token)
-from ..utils.email import send_mail
-from ..utils.config import get_settings
+from .schema import (UserIn,
+                     UserOut,
+                     UserOutPrivateData,
+                     AccessRefreshToken,
+                     RefreshToken)
 
 
 from fastapi import (Depends,
