@@ -1,15 +1,18 @@
 
 
+from sqlalchemy.orm import session
 from ..db.models import User
 from ..db.database import engine
-from ..utils.email import send_mail
+from ..utils.email import send_email_verification_mail
 from ..utils.config import get_settings
 from ..utils.auth import (get_hashed_password,
+                          verify_password,
                           token_generator,
                           token_generator_by_refresh_token,
                           get_current_user,
                           get_current_user_by_refresh_token)
 from .schema import (UserIn,
+                     UserUpdate,
                      UserOut,
                      UserOutPrivateData,
                      AccessRefreshToken,
@@ -54,13 +57,34 @@ async def create_user(*, session: Session = Depends(get_session), user: UserIn):
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
-    await send_mail([db_user.email], db_user)
+    await send_email_verification_mail(db_user.email, db_user)
     return db_user
 
 
 @router.put('/user/', response_model=UserOutPrivateData, status_code=status.HTTP_202_ACCEPTED, tags=['user'])
-async def update_user(user_new_data: UserIn, user: User = Depends(get_current_user)):
-    pass
+async def update_user(user_new_data: UserUpdate,
+                      user: User = Depends(get_current_user),
+                      session: Session = Depends(get_session)
+                      ):
+    if user_new_data.username != user.username:
+        if session.exec(select(User).where(User.username == user_new_data.username)).first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists")
+        user.username = user_new_data.username
+
+    if user_new_data.email != user.email:
+        if session.exec(select(User).where(User.email == user_new_data.email)).first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+
+        user.is_verifide = False
+        user.email = user_new_data.email
+        await send_email_verification_mail(user.email, user)
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 
 
 @router.delete('/user/', status_code=status.HTTP_204_NO_CONTENT, tags=['user'])

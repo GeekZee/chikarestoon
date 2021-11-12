@@ -20,6 +20,11 @@ class UserIn(BaseModel):
     email: EmailStr
 
 
+class UserUpdate(BaseModel):
+    username: str = Field(min_length=5, max_length=20)
+    email: EmailStr
+
+
 class UserOut(BaseModel):
     username: str = Field(min_length=5, max_length=20)
     join_date: datetime
