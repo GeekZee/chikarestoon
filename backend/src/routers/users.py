@@ -39,8 +39,8 @@ def get_session():
         yield session
 
 
-@router.post("/signup/", response_model=UserOut, status_code=status.HTTP_201_CREATED, tags=['auth'])
-async def sign_up(*, session: Session = Depends(get_session), user: UserIn):
+@router.post("/user/", response_model=UserOutPrivateData, status_code=status.HTTP_201_CREATED, tags=['user'])
+async def create_user(*, session: Session = Depends(get_session), user: UserIn):
     if session.exec(select(User).where(User.email == user.email)).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
@@ -58,7 +58,36 @@ async def sign_up(*, session: Session = Depends(get_session), user: UserIn):
     return db_user
 
 
-@router.get("/verification/email", response_class=HTMLResponse, tags=['email'])
+@router.put('/user/', response_model=UserOutPrivateData, status_code=status.HTTP_202_ACCEPTED, tags=['user'])
+async def update_user(user_new_data: UserIn, user: User = Depends(get_current_user)):
+    pass
+
+
+@router.delete('/user/', status_code=status.HTTP_204_NO_CONTENT, tags=['user'])
+async def delete_user(user: User = Depends(get_current_user),
+                      session: Session = Depends(get_session)):
+    session.delete(user)
+    session.commit()
+
+
+@router.get('/user/me', response_model=UserOutPrivateData, tags=['user'])
+async def full_user_profile(user: User = Depends(get_current_user)):
+    return user
+
+
+@router.get('/user/{username}', response_model=UserOut, tags=['user'])
+async def user_public_data(username: str, session: Session = Depends(get_session)):
+    user = session.exec(select(User).where(User.username == username)).first()
+    if user:
+        return user
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Username Not Found"
+    )
+
+
+@router.get("/users/verification/email", response_class=HTMLResponse, tags=['user'])
 async def email_verification(request: Request,
                              token: str,
                              session: Session = Depends(get_session)):
@@ -96,29 +125,12 @@ async def email_verification(request: Request,
         return template.TemplateResponse("verification.html", context)
 
 
-@router.post("/auth/login", response_model=AccessRefreshToken, tags=['auth'])
+@router.post("/token", response_model=AccessRefreshToken, tags=['auth'])
 async def generate_access_token_and_refresh_token(request_form: OAuth2PasswordRequestForm = Depends()):
     return await token_generator(request_form.username, request_form.password)
 
 
-@router.post('/auth/refresh', response_model=RefreshToken, tags=['auth'])
+@router.post('/token/refresh', response_model=RefreshToken, tags=['auth'])
 async def fresh_access_token(user: User = Depends(get_current_user_by_refresh_token)):
     '''imput `refresh_token` and return a new`access_token`'''
     return await token_generator_by_refresh_token(user)
-
-
-@router.get('/me', response_model=UserOutPrivateData, tags=['users'])
-async def full_user_profile(user: User = Depends(get_current_user)):
-    return user
-
-
-@router.get('/detail/{username}', response_model=UserOut, tags=['users'])
-async def user_public_data(username: str, session: Session = Depends(get_session)):
-    user = session.exec(select(User).where(User.username == username)).first()
-    if user:
-        return user
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="Username Not Found"
-    )

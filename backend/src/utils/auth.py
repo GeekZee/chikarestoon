@@ -13,7 +13,8 @@ from passlib.context import CryptContext
 import jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth_scheme = OAuth2PasswordBearer(tokenUrl="api/user/token/access")
+
+oauth_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def get_hashed_password(password):
@@ -30,12 +31,6 @@ async def authenticate_user(username: str, password: str):
             User.username == username)).first()
 
     if user and verify_password(password, user.password):
-        if not user.is_verifide:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email not verifide",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
         return user
     return False
 
