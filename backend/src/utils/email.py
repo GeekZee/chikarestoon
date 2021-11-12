@@ -1,11 +1,14 @@
+import asyncio
+import threading
 from typing import List
 from datetime import datetime, timedelta
+
 from ..db.models import User
 from ..utils.config import get_settings
 
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 import jwt
-
+from pydantic import EmailStr
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
 SITE_URL = get_settings().SITE_URL
 SITE_NAME = get_settings().SITE_NAME
@@ -24,7 +27,20 @@ conf = ConnectionConfig(
 )
 
 
-async def send_mail(email: List, instance: User):
+async def send_mail(emails: List[EmailStr], template: str, subject: str, subtype="html"):
+    message = MessageSchema(
+        subject=subject,
+        recipients=emails,
+        body=template,
+        subtype=subtype
+    )
+    fm = FastMail(conf)
+
+    threading.Thread(target=asyncio.run, args=(
+        fm.send_message(message),)).start()
+
+
+async def send_email_verification_mail(email: EmailStr, instance: User):
     """send Account Verification mail"""
 
     token_data = {
@@ -43,30 +59,26 @@ async def send_mail(email: List, instance: User):
     </head>
     <body>
         <div style = "display:flex; align-items: center; flex-direction: column" >
-            <h3>Chikarestoon Account Verification</H3>
+
+            <h3>Chikarestoon Email Verification</H3>
 
             <br>
 
             <p>
-                Thanx for choosing us, please click on the button below
-                to verify your account
+                please click on the button below to verify your email
             </p> 
             
             <a style = "display:marign-top: 1rem ; padding: 1rem; border-redius: 0.5rem;
              font-size:1rem; text-decoration: no; background: #0275d8; color:white"
-             href="{SITE_URL}/api/user/verification/email/?token={token}">
+
+             href="{SITE_URL}/users/verification/email/?token={token}">
                 Verify your email
              </a>
         </div>
     </body>
     </html>
     """
+    subject = f'{SITE_NAME} email verification'
 
-    message = MessageSchema(
-        subject=SITE_NAME + " account verification",
-        recipients=email,  # List of recipients,
-        body=template,
-        subtype="html"
-    )
-    fm = FastMail(conf)
-    await fm.send_message(message)
+    await send_mail(emails=[email], template=template,
+                    subject=subject, subtype="html")
