@@ -1,6 +1,3 @@
-
-
-from sqlalchemy.orm import session
 from ..db.models import User
 from ..db.database import engine
 from ..utils.email import send_email_verification_mail
@@ -30,6 +27,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlmodel import Session, select
+from pydantic import EmailStr
+
 import jwt
 
 router = APIRouter()
@@ -59,6 +58,12 @@ async def create_user(*, session: Session = Depends(get_session), user: UserIn):
     session.refresh(db_user)
     await send_email_verification_mail(db_user.email, db_user)
     return db_user
+
+
+@router.post('/user/forget_password/', tags=['user'])
+async def change_password(email: EmailStr):
+    # TODO: create this! (change password, use client email)
+    pass
 
 
 @router.put('/user/', response_model=UserOutPrivateData, status_code=status.HTTP_202_ACCEPTED, tags=['user'])
@@ -109,6 +114,11 @@ async def user_public_data(username: str, session: Session = Depends(get_session
         status_code=status.HTTP_404_NOT_FOUND,
         detail="Username Not Found"
     )
+
+
+@router.post('/users/verification/email', tags=['user'], status_code=status.HTTP_204_NO_CONTENT)
+async def send_new_email_verification(user: User = Depends(get_current_user)):
+    await send_email_verification_mail(user.email, user)
 
 
 @router.get("/users/verification/email", response_class=HTMLResponse, tags=['user'])
