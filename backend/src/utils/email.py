@@ -60,7 +60,7 @@ async def send_email_verification_mail(email: EmailStr, instance: User):
     <body>
         <div style = "display:flex; align-items: center; flex-direction: column" >
 
-            <h3>Chikarestoon Email Verification</H3>
+            <h3>{SITE_NAME} | Email Verification</H3>
 
             <br>
 
@@ -79,6 +79,40 @@ async def send_email_verification_mail(email: EmailStr, instance: User):
     </html>
     """
     subject = f'{SITE_NAME} email verification'
+
+    await send_mail(emails=[email], template=template,
+                    subject=subject, subtype="html")
+
+
+async def send_email_change_password(code: int, email: EmailStr, instance: User):
+
+    template = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <div style = "display:flex; align-items: center; flex-direction: column" >
+
+            <h3>{SITE_NAME} | Change password</H3>
+
+            <br>
+
+            <p>
+                Password Change code for {instance.username}
+            </p> 
+            
+            <p style = "display:marign-top: 1rem ; padding: 1rem; border-redius: 0.5rem;
+             font-size:1rem; text-decoration: no; background: #0275d8; color:white">
+                {code}
+             </p>
+        </div>
+    </body>
+    </html>
+    """
+
+    subject = f'{SITE_NAME} Forgot password'
 
     await send_mail(emails=[email], template=template,
                     subject=subject, subtype="html")

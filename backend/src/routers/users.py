@@ -1,9 +1,12 @@
+from random import randint
+
+
 from ..db.models import User
+from ..utils.redis_utils import get_password_code, save_password_code
 from ..db.database import engine
-from ..utils.email import send_email_verification_mail
+from ..utils.email import send_email_verification_mail, send_email_change_password
 from ..utils.config import get_settings
 from ..utils.auth import (get_hashed_password,
-                          verify_password,
                           token_generator,
                           token_generator_by_refresh_token,
                           get_current_user,
@@ -13,7 +16,8 @@ from .schema import (UserIn,
                      UserOut,
                      UserOutPrivateData,
                      AccessRefreshToken,
-                     RefreshToken)
+                     RefreshToken,
+                     ChangePassword)
 
 
 from fastapi import (Depends,
@@ -21,6 +25,7 @@ from fastapi import (Depends,
                      HTTPException,
                      status,
                      Request,
+                     Body
                      )
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -30,6 +35,7 @@ from sqlmodel import Session, select
 from pydantic import EmailStr
 
 import jwt
+
 
 router = APIRouter()
 
@@ -60,10 +66,44 @@ async def create_user(*, session: Session = Depends(get_session), user: UserIn):
     return db_user
 
 
-@router.post('/user/forget_password/', tags=['user'])
-async def change_password(email: EmailStr):
-    # TODO: create this! (change password, use client email)
-    pass
+@router.post('/user/password/send/code', tags=['user'], status_code=status.HTTP_204_NO_CONTENT)
+async def forget_password_send_code(email: EmailStr,
+                                    session: Session = Depends(get_session)
+                                    ):
+    user = session.exec(select(User).where(User.email == email)).first()
+    if user:
+        code = randint(100000, 999999)
+
+        save_password_code(email=email, code=code)
+
+        await send_email_change_password(code, email, user)
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+
+@router.put('/user/password/change', tags=['user'], status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(data: ChangePassword,
+                          session: Session = Depends(get_session)
+                          ):
+    code_on_db = get_password_code(email=data.email)
+
+    if code_on_db and data.code == code_on_db:
+        user = session.exec(
+            select(User).where(User.email == data.email)).first()
+
+        if user:
+            user.password = get_hashed_password(data.new_password)
+            session.add(user)
+            session.commit()
+            return
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Email not found")
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect code")
 
 
 @router.put('/user/', response_model=UserOutPrivateData, status_code=status.HTTP_202_ACCEPTED, tags=['user'])
@@ -92,19 +132,19 @@ async def update_user(user_new_data: UserUpdate,
     return user
 
 
-@router.delete('/user/', status_code=status.HTTP_204_NO_CONTENT, tags=['user'])
+@ router.delete('/user/', status_code=status.HTTP_204_NO_CONTENT, tags=['user'])
 async def delete_user(user: User = Depends(get_current_user),
                       session: Session = Depends(get_session)):
     session.delete(user)
     session.commit()
 
 
-@router.get('/user/me', response_model=UserOutPrivateData, tags=['user'])
+@ router.get('/user/me', response_model=UserOutPrivateData, tags=['user'])
 async def full_user_profile(user: User = Depends(get_current_user)):
     return user
 
 
-@router.get('/user/{username}', response_model=UserOut, tags=['user'])
+@ router.get('/user/{username}', response_model=UserOut, tags=['user'])
 async def user_public_data(username: str, session: Session = Depends(get_session)):
     user = session.exec(select(User).where(User.username == username)).first()
     if user:
@@ -116,12 +156,12 @@ async def user_public_data(username: str, session: Session = Depends(get_session
     )
 
 
-@router.post('/users/verification/email', tags=['user'], status_code=status.HTTP_204_NO_CONTENT)
+@ router.post('/users/verification/email', tags=['user'], status_code=status.HTTP_204_NO_CONTENT)
 async def send_new_email_verification(user: User = Depends(get_current_user)):
     await send_email_verification_mail(user.email, user)
 
 
-@router.get("/users/verification/email", response_class=HTMLResponse, tags=['user'])
+@ router.get("/users/verification/email", response_class=HTMLResponse, tags=['user'])
 async def email_verification(request: Request,
                              token: str,
                              session: Session = Depends(get_session)):
@@ -159,12 +199,12 @@ async def email_verification(request: Request,
         return template.TemplateResponse("verification.html", context)
 
 
-@router.post("/token", response_model=AccessRefreshToken, tags=['auth'])
+@ router.post("/token", response_model=AccessRefreshToken, tags=['auth'])
 async def generate_access_token_and_refresh_token(request_form: OAuth2PasswordRequestForm = Depends()):
     return await token_generator(request_form.username, request_form.password)
 
 
-@router.post('/token/refresh', response_model=RefreshToken, tags=['auth'])
+@ router.post('/token/refresh', response_model=RefreshToken, tags=['auth'])
 async def fresh_access_token(user: User = Depends(get_current_user_by_refresh_token)):
     '''imput `refresh_token` and return a new`access_token`'''
     return await token_generator_by_refresh_token(user)
