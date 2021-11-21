@@ -110,6 +110,7 @@ async def delete_user(user: User = Depends(get_current_user),
                       session: Session = Depends(get_session)):
     session.delete(user)
     await session.commit()
+    # TODO chech this route: not deleted..
 
 
 @router.get('/user/me', response_model=UserOutPrivateData, tags=['user'])
