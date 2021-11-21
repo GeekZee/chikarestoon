@@ -1,9 +1,6 @@
 import asyncio
 import threading
-from typing import List
 from datetime import datetime, timedelta
-
-from pydantic.errors import EmailError
 
 from ..db.models import User
 from ..utils.config import get_settings
@@ -51,8 +48,8 @@ async def send_email_verification_mail(email: EmailStr, instance: User):
     """send Account Verification mail"""
 
     token_data = {
-        "id": instance.id,
-        "type": "email_verification",
+        "uid": instance.id,
+        "typ": "E",
         "exp": datetime.utcnow() + timedelta(days=1)
     }
 

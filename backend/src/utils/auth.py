@@ -49,13 +49,13 @@ async def token_generator(username: str, password: str, ):
     refresh_expire = datetime.utcnow() + timedelta(days=1)
 
     access_token_data = {
-        "user_id": user.id,
-        "type": "access_token",
+        "uid": user.id,
+        "typ": "A",  # access_token
         "exp": access_expire}
 
     refresh_token_data = {
-        "user_id": user.id,
-        "type": "refresh_token",
+        "uid": user.id,
+        "typ": "R",  # refresh_token
         "exp": refresh_expire}
 
     access_token = jwt.encode(access_token_data,
@@ -73,8 +73,8 @@ async def token_generator_by_refresh_token(user: User):
     access_expire = datetime.utcnow() + timedelta(minutes=15)
 
     access_token_data = {
-        "user_id": user.id,
-        "type": "access_token",
+        "uid": user.id,
+        "typ": "A",  # access_token
         "exp": access_expire}
 
     access_token = jwt.encode(access_token_data,
@@ -97,8 +97,8 @@ async def get_current_user_by_refresh_token(token: str = Depends(oauth_scheme)):
     except:
         raise credentials_exception
     try:
-        if payload['type'] == 'refresh_token':
-            user_id = payload['user_id']
+        if payload['typ'] == 'R':  # refresh_token
+            user_id = payload['uid']
 
             with Session(engine) as session:
                 user = session.exec(select(User).where(
@@ -125,8 +125,8 @@ async def get_current_user(token: str = Depends(oauth_scheme)):
         raise credentials_exception
 
     try:
-        if payload['type'] == 'access_token':
-            user_id = payload['user_id']
+        if payload['typ'] == 'A':  # access_token
+            user_id = payload['uid']
 
             with Session(engine) as session:
                 user = session.exec(select(User).where(
