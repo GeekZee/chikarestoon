@@ -3,8 +3,12 @@ import threading
 from typing import List
 from datetime import datetime, timedelta
 
+from pydantic.errors import EmailError
+
 from ..db.models import User
 from ..utils.config import get_settings
+from .redis_utils import email_limited
+
 
 import jwt
 from pydantic import EmailStr
@@ -27,17 +31,20 @@ conf = ConnectionConfig(
 )
 
 
-async def send_mail(emails: List[EmailStr], template: str, subject: str, subtype="html"):
-    message = MessageSchema(
-        subject=subject,
-        recipients=emails,
-        body=template,
-        subtype=subtype
-    )
-    fm = FastMail(conf)
+async def send_mail(email: EmailStr, template: str, subject: str, subtype="html"):
+    if not email_limited(email=email):
+        message = MessageSchema(
+            subject=subject,
+            recipients=[email],
+            body=template,
+            subtype=subtype
+        )
+        fm = FastMail(conf)
 
-    threading.Thread(target=asyncio.run, args=(
-        fm.send_message(message),)).start()
+        threading.Thread(
+            target=asyncio.run,
+            args=(fm.send_message(message),)
+        ).start()
 
 
 async def send_email_verification_mail(email: EmailStr, instance: User):
@@ -80,7 +87,7 @@ async def send_email_verification_mail(email: EmailStr, instance: User):
     """
     subject = f'{SITE_NAME} email verification'
 
-    await send_mail(emails=[email], template=template,
+    await send_mail(email=email, template=template,
                     subject=subject, subtype="html")
 
 
@@ -114,5 +121,5 @@ async def send_email_change_password(code: int, email: EmailStr, instance: User)
 
     subject = f'{SITE_NAME} Forgot password'
 
-    await send_mail(emails=[email], template=template,
+    await send_mail(email=email, template=template,
                     subject=subject, subtype="html")
