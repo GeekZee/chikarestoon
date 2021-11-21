@@ -37,10 +37,15 @@ class UserOutPrivateData(UserOut):
     id: int
 
 
-class ChangePassword(BaseModel):
+class ChangePasswordByEmail(BaseModel):
     email: EmailStr
     code: int = Field(ge=100000, le=999999)
     new_password: str = Field(min_length=8)
+
+
+class ChangePassword(BaseModel):
+    new_password: str = Field(min_length=8)
+    old_password: str = Field(min_length=8)
 
 
 class PostSort(str, Enum):

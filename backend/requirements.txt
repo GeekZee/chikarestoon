@@ -1,5 +1,6 @@
 aioredis==2.0.0
 aiosmtplib==1.1.6
+aiosqlite==0.17.0
 anyio==3.3.4
 asgiref==3.4.1
 async-timeout==4.0.0

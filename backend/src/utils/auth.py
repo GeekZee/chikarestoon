@@ -1,13 +1,16 @@
 from datetime import datetime, timedelta
-
+import time
 
 from ..db.models import User
 from ..db.database import engine
-from ..utils.config import get_settings
+from .config import get_settings
+from .redis_utils import is_token_invalid_in_redis, save_expire_token
 
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
+
 from sqlmodel import Session, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from passlib.context import CryptContext
 import jwt
@@ -26,9 +29,10 @@ def verify_password(plain_password, database_hashed_password):
 
 
 async def authenticate_user(username: str, password: str):
-    with Session(engine) as session:
-        user = session.exec(select(User).where(
-            User.username == username)).first()
+    async with AsyncSession(engine) as session:
+        user = await session.exec(select(User).where(
+            User.username == username))
+        user = user.first()
 
     if user and verify_password(password, user.password):
         return user
@@ -100,9 +104,13 @@ async def get_current_user_by_refresh_token(token: str = Depends(oauth_scheme)):
         if payload['typ'] == 'R':  # refresh_token
             user_id = payload['uid']
 
-            with Session(engine) as session:
-                user = session.exec(select(User).where(
-                    User.id == user_id)).first()
+            if is_token_invalid_in_redis(user_id=user_id, token=token):
+                raise credentials_exception
+
+            async with AsyncSession(engine) as session:
+                user = await session.exec(select(User).where(
+                    User.id == user_id))
+                user = user.first()
             if user:
                 return user
 
@@ -125,15 +133,38 @@ async def get_current_user(token: str = Depends(oauth_scheme)):
         raise credentials_exception
 
     try:
+
         if payload['typ'] == 'A':  # access_token
             user_id = payload['uid']
 
-            with Session(engine) as session:
-                user = session.exec(select(User).where(
-                    User.id == user_id)).first()
+            if is_token_invalid_in_redis(user_id=user_id, token=token):
+                raise credentials_exception
+
+            async with AsyncSession(engine) as session:
+                user = await session.exec(select(User).where(
+                    User.id == user_id))
+                user = user.first()
             if user:
                 return user
 
         raise credentials_exception
+    except:
+        raise credentials_exception
+
+
+def expired_token(token: str = Depends(oauth_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    payload = jwt.decode(token, get_settings().SECRET,
+                         algorithms=["HS256"])
+    try:
+        uid = payload['uid']
+        exp = int(payload['exp'] - time.time()) + 10
+
+        save_expire_token(user_id=uid, token=token, expire_secound=exp)
     except:
         raise credentials_exception
