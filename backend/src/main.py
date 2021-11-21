@@ -13,4 +13,4 @@ def on_startup():
     create_db_and_tables()
 
 
-app.include_router(users.router)
+app.include_router(users.router, prefix='/v1')

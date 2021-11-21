@@ -71,7 +71,7 @@ async def send_email_verification_mail(email: EmailStr, instance: User):
             <a style = "display:marign-top: 1rem ; padding: 1rem; border-redius: 0.5rem;
              font-size:1rem; text-decoration: no; background: #0275d8; color:white"
 
-             href="{SITE_URL}/users/verification/email/?token={token}">
+             href="{SITE_URL}/v1/users/verification/email/?token={token}">
                 Verify your email
              </a>
         </div>

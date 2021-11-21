@@ -14,7 +14,7 @@ import jwt
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth_scheme = OAuth2PasswordBearer(tokenUrl="v1/token")
 
 
 def get_hashed_password(password):
