@@ -130,7 +130,7 @@ async def email_verification(request: Request,
                              get_settings().SECRET,
                              algorithms=["HS256"])
 
-        if payload.get("typ") == 'E':
+        if payload.get("typ") == 'E':  # Email
             user = session.exec(
                 select(User).where(User.id == payload.get("uid"))).first()
 

@@ -49,7 +49,7 @@ async def send_email_verification_mail(email: EmailStr, instance: User):
 
     token_data = {
         "uid": instance.id,
-        "typ": "E",
+        "typ": "E",  # Email
         "exp": datetime.utcnow() + timedelta(days=1)
     }
 
